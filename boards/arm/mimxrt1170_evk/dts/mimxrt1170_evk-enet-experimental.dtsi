@@ -1,0 +1,113 @@
+/*
+ * Copyright 2021,2023 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	soc {
+		/delete-node/ ethernet@40424000;
+
+		enet: ethernet@40424000 {
+			compatible = "nxp,enet";
+			reg = <0x40424000 0x628>;
+			clocks = <&ccm IMX_CCM_ENET_CLK 0 0>;
+			enet_mac: ethernet {
+				compatible = "nxp,enet-mac";
+				interrupts = <137 0>;
+				interrupt-names = "COMMON";
+				nxp,mdio = <&enet_mdio>;
+				nxp,ptp-clock = <&enet_ptp_clock>;
+				phy-connection-type = "rmii";
+				status = "disabled";
+			};
+			enet_mdio: mdio {
+				compatible = "nxp,enet-mdio";
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+			enet_ptp_clock: ptp_clock {
+				compatible = "nxp,enet-ptp-clock";
+				interrupts = <138 0>;
+				status = "disabled";
+				clocks = <&ccm IMX_CCM_ENET_CLK 0 0>;
+			};
+		};
+	};
+};
+
+&enet_mac {
+	status = "okay";
+	pinctrl-0 = <&pinmux_enet>;
+	pinctrl-names = "default";
+	phy-handle = <&phy>;
+};
+
+&enet_mdio {
+	status = "okay";
+	pinctrl-0 = <&pinmux_enet_mdio>;
+	pinctrl-names = "default";
+	phy: phy@2 {
+		compatible = "microchip,ksz8081";
+		reg = <2>;
+		status = "okay";
+		mc,reset-gpio = <&gpio12 12 GPIO_ACTIVE_HIGH>;			// ENET_RST
+		mc,interrupt-gpio = <&gpio9 11 GPIO_ACTIVE_HIGH>;		// ENET_INT
+		mc,interface-type = "rmii";
+	};
+};
+
+&enet_ptp_clock {
+	status = "okay";
+	pinctrl-0 = <&pinmux_ptp>;
+	pinctrl-names = "default";
+};
+
+&pinctrl {
+	/delete-node/ pinmux_ptp;
+	/delete-node/ pinmux_enet;
+
+	pinmux_enet: pinmux_enet {
+		group0 {
+			pinmux = <&iomuxc_gpio_disp_b2_05_enet_ref_clk>;	// ENET_TX_REF_CLK
+			bias-disable;
+			drive-strength = "high";
+			slew-rate = "fast";
+			input-enable;
+		};
+		group1 {
+			pinmux = <&iomuxc_gpio_disp_b2_02_enet_tdata00>,	// ENET_TXD0
+				<&iomuxc_gpio_disp_b2_03_enet_tdata01>,		// ENET_TXD1
+				<&iomuxc_gpio_disp_b2_06_enet_rdata00>,		// ENET_RXD0
+				<&iomuxc_gpio_disp_b2_07_enet_rdata01>,		// ENET_RXD1
+				<&iomuxc_gpio_disp_b2_08_enet_rx_en>,		// ENET_CRS_DV
+				<&iomuxc_gpio_disp_b2_04_enet_tx_en>,		// ENET_TXEN
+				<&iomuxc_gpio_disp_b2_09_enet_rx_er>;		// ENET_RXER
+			drive-strength = "high";
+			bias-pull-up;
+			slew-rate = "fast";
+		};
+	};
+
+	pinmux_enet_mdio: pinmux_enet_mdio {
+		group0 {
+			pinmux = <&iomuxc_gpio_ad_32_enet_mdc>,			// ENET_MDC
+				<&iomuxc_gpio_ad_33_enet_mdio>,			// ENET_MDIO
+				<&iomuxc_lpsr_gpio_lpsr_12_gpio12_io12>,	// ENET_RST
+				<&iomuxc_gpio_ad_12_gpio9_io11>;		// ENET_INT
+			drive-strength = "high";
+			bias-pull-up;
+			slew-rate = "fast";
+		};
+	};
+
+	pinmux_ptp: pinmux_ptp {
+		group0 {
+			pinmux = <&iomuxc_gpio_ad_34_enet_1588_event0_in>,	// 1588_EVENT0_IN
+				<&iomuxc_gpio_ad_35_enet_1588_event0_out>;	// 1588_EVENT0_OUT
+			drive-strength = "high";
+			slew-rate = "slow";
+		};
+	};
+};
