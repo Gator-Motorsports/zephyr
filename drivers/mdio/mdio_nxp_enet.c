@@ -16,8 +16,8 @@
 #include <zephyr/sys_clock.h>
 #include <soc.h>
 
-/* Target MDC frequency 2.5 MHz */
-#define NXP_ENET_MDIO_MDC_FREQ 2500000U
+/* Target MDC frequency 25 MHz */
+#define NXP_ENET_MDIO_MDC_FREQ 25000000U
 
 struct nxp_enet_mdio_config {
 	ENET_Type *base;

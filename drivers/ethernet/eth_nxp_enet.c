@@ -793,6 +793,9 @@ static int eth_nxp_enet_init(const struct device *dev)
 		enet_config.miiMode = kENET_MiiMode;
 	} else if (config->phy_mode == NXP_ENET_RMII_MODE) {
 		enet_config.miiMode = kENET_RmiiMode;
+	} else if (config->phy_mode == NXP_ENET_RGMII_MODE) {
+		enet_config.miiMode = kENET_RgmiiMode;
+		enet_config.miiSpeed = kENET_MiiSpeed1000M;
 	} else {
 		return -EINVAL;
 	}
@@ -955,7 +958,8 @@ static const struct ethernet_api api_funcs = {
 #define NXP_ENET_PHY_MODE(node_id)							\
 	DT_ENUM_HAS_VALUE(node_id, phy_connection_type, mii) ? NXP_ENET_MII_MODE :	\
 	(DT_ENUM_HAS_VALUE(node_id, phy_connection_type, rmii) ? NXP_ENET_RMII_MODE :	\
-	NXP_ENET_INVALID_MII_MODE)
+	(DT_ENUM_HAS_VALUE(node_id, phy_connection_type, gmii) ? NXP_ENET_RGMII_MODE :	\
+	NXP_ENET_INVALID_MII_MODE))
 
 #ifdef CONFIG_PTP_CLOCK_NXP_ENET
 #define NXP_ENET_PTP_DEV(n) .ptp_clock = DEVICE_DT_GET(DT_INST_PHANDLE(n, nxp_ptp_clock)),
