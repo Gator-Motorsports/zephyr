@@ -86,7 +86,7 @@ static void broadcast_source_set_ep_state(struct bt_bap_ep *ep, uint8_t state)
 		}
 		break;
 	case BT_BAP_EP_STATE_ENABLING:
-		if (state != BT_BAP_EP_STATE_STREAMING) {
+		if (state != BT_BAP_EP_STATE_STREAMING && state != BT_BAP_EP_STATE_QOS_CONFIGURED) {
 			LOG_DBG("Invalid broadcast sync endpoint state transition");
 			return;
 		}
@@ -167,6 +167,11 @@ static void broadcast_source_iso_connected(struct bt_iso_chan *chan)
 	}
 
 	LOG_DBG("stream %p ep %p", stream, ep);
+
+#if defined(CONFIG_BT_BAP_DEBUG_STREAM_SEQ_NUM)
+	/* reset sequence number */
+	stream->_prev_seq_num = 0U;
+#endif /* CONFIG_BT_BAP_DEBUG_STREAM_SEQ_NUM */
 
 	ops = stream->ops;
 	if (ops != NULL && ops->connected != NULL) {

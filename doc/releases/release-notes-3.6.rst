@@ -149,6 +149,17 @@ Boards & SoC Support
 Build system and infrastructure
 *******************************
 
+* Added functionality for Link Time Optimization.
+  This change includes interrupt script generator rebuilding and adding following options:
+
+  - :kconfig:option:`CONFIG_ISR_TABLES_LOCAL_DECLARATION` Kconfig option:
+    LTO compatible interrupt tables parser,
+  - :kconfig:option:`CONFIG_LTO` Kconfig option: Enable Link Time Optimization.
+
+  Currently the LTO compatible interrupt tables parser is only supported by ARM architectures and
+  GCC compiler/linker.
+  See `pull request :github:`66392` for details.
+
 * Dropped the ``COMPAT_INCLUDES`` option, it was unused since 3.0.
 
 * Fixed an issue whereby board revision ``0`` did not include overlay files for that revision.
@@ -175,6 +186,15 @@ Build system and infrastructure
   globally when building with Picolibc or for the native (``ARCH_POSIX``) targets.
   After this change users may need to define them for their own applications or libraries if they
   require them.
+
+* Added support for sysbuild setting a signing script (``SIGNING_SCRIPT``), see
+  :ref:`west-extending-signing` for details.
+
+* Added support for ``FILE_SUFFIX`` in the build system which allows for adding suffixes to
+  application Kconfig fragment file names and devicetree overlay file names, see
+  :ref:`application-file-suffixes` and :ref:`sysbuild_file_suffixes` for details.
+
+* Deprecated ``CONF_FILE`` ``prj_<build>.conf`` build type.
 
 Drivers and Sensors
 *******************
@@ -248,6 +268,20 @@ Drivers and Sensors
 * Interrupt Controller
 
 * Input
+
+  * The ``short-codes`` property of :dtcompatible:`zephyr,input-longpress` is
+    now optional, the node can be used by specifying only input and long codes.
+  * Added support for keyboard matrix drivers, including a new
+    :dtcompatible:`gpio-kbd-matrix` and :dtcompatible:`input-keymap` drivers,
+    see :ref:`gpio-kbd` for more details.
+  * Added a pair of input codes to HID codes translation functions, see
+    :c:func:`input_to_hid_code` and :c:func:`input_to_hid_modifier`.
+  * Added power management support to :dtcompatible:`gpio-keys`
+    :dtcompatible:`focaltech,ft5336`.
+  * Added a :dtcompatible:`zephyr,native-linux-evdev` device node for getting
+    input events from a Linux evdev device node.
+  * Added support for optical encoders and power management to :dtcompatible:`gpio-qdec`.
+  * New drivers :dtcompatible:`espressif,esp32-touch`, :dtcompatible:`analog-axis`.
 
 * PCIE
 
@@ -427,6 +461,41 @@ HALs
 
 MCUboot
 *******
+
+  * Fixed compatible sector checking in bootutil.
+
+  * Fixed Kconfig issue with saving encrypted TLVs not depending on encryption being enabled.
+
+  * Fixed issue with missing condition check for applications in sysflash include file.
+
+  * Fixed issue with single slot encrypted image listing support in boot_serial.
+
+  * Fixed issue with allowing MBEDTLS Kconfig selection when tinycrypt is used.
+
+  * Fixed missing response if echo command was disabled in boot_serial.
+
+  * Fixed issue with USB configurations not generating usable images.
+
+  * Added debug logging for boot status write in bootutil.
+
+  * Added estimated image overhead size to cache in sysbuild.
+
+  * Added firmware loader operating mode which allows for a dedicated secondary slot image that
+    is used to update the primary image.
+
+  * Added error if main thread is not pre-emptible when USB CDC serial recovery is enabled.
+
+  * Added error if USB CDC and console are both enabled and set to the same device.
+
+  * Removed the deprecated ``CONFIG_ZEPHYR_TRY_MASS_ERASE`` Kconfig option.
+
+  * Updated zcbor to version 0.8.1 and re-generated boot_serial files.
+
+  * Moved IO functions out of main to separate file.
+
+  * Made ``align`` parameter of imgtool optional.
+
+  * The MCUboot version in this release is version ``2.1.0+0-dev``.
 
 Nanopb
 ******

@@ -72,7 +72,15 @@ static void micp_mic_ctlr_discover_complete(struct bt_micp_mic_ctlr *mic_ctlr, i
 
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&micp_mic_ctlr_cbs, listener, next, _node) {
 		if (listener->discover) {
-			listener->discover(mic_ctlr, err, err == 0 ? mic_ctlr->aics_inst_cnt : 0U);
+			uint8_t aics_cnt = 0U;
+
+#if defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
+			if (err == 0) {
+				aics_cnt = mic_ctlr->aics_inst_cnt;
+			}
+#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
+
+			listener->discover(mic_ctlr, err, aics_cnt);
 		}
 	}
 }
@@ -298,7 +306,6 @@ static void micp_mic_ctlr_aics_set_auto_mode_cb(struct bt_aics *inst, int err)
 		}
 	}
 }
-#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
 
 static uint8_t micp_discover_include_func(
 	struct bt_conn *conn, const struct bt_gatt_attr *attr,
@@ -350,6 +357,7 @@ static uint8_t micp_discover_include_func(
 
 	return BT_GATT_ITER_CONTINUE;
 }
+#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
 
 /**
  * @brief This will discover all characteristics on the server, retrieving the
@@ -367,22 +375,22 @@ static uint8_t micp_discover_func(struct bt_conn *conn,
 
 		LOG_DBG("Discovery complete");
 		(void)memset(params, 0, sizeof(*params));
-		if (CONFIG_BT_MICP_MIC_CTLR_MAX_AICS_INST > 0) {
-			/* Discover included services */
-			mic_ctlr->discover_params.start_handle = mic_ctlr->start_handle;
-			mic_ctlr->discover_params.end_handle = mic_ctlr->end_handle;
-			mic_ctlr->discover_params.type = BT_GATT_DISCOVER_INCLUDE;
-			mic_ctlr->discover_params.func = micp_discover_include_func;
 
-			err = bt_gatt_discover(conn,
-					       &mic_ctlr->discover_params);
-			if (err != 0) {
-				LOG_DBG("Discover AICS failed (err %d)", err);
-				micp_mic_ctlr_discover_complete(mic_ctlr, err);
-			}
-		} else {
+#if defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
+		/* Discover included services */
+		mic_ctlr->discover_params.start_handle = mic_ctlr->start_handle;
+		mic_ctlr->discover_params.end_handle = mic_ctlr->end_handle;
+		mic_ctlr->discover_params.type = BT_GATT_DISCOVER_INCLUDE;
+		mic_ctlr->discover_params.func = micp_discover_include_func;
+
+		err = bt_gatt_discover(conn, &mic_ctlr->discover_params);
+		if (err != 0) {
+			LOG_DBG("Discover AICS failed (err %d)", err);
 			micp_mic_ctlr_discover_complete(mic_ctlr, err);
 		}
+#else
+		micp_mic_ctlr_discover_complete(mic_ctlr, err);
+#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
 
 		return BT_GATT_ITER_STOP;
 	}
@@ -409,13 +417,18 @@ static uint8_t micp_discover_func(struct bt_conn *conn,
 			sub_params->value = BT_GATT_CCC_NOTIFY;
 			sub_params->value_handle = chrc->value_handle;
 			sub_params->notify = mute_notify_handler;
+			atomic_set_bit(sub_params->flags, BT_GATT_SUBSCRIBE_FLAG_VOLATILE);
 
 			err = bt_gatt_subscribe(conn, sub_params);
-			if (err == 0) {
+			if (err == 0 || err == -EALREADY) {
 				LOG_DBG("Subscribed to handle 0x%04X", attr->handle);
 			} else {
 				LOG_DBG("Could not subscribe to handle 0x%04X: %d", attr->handle,
 					err);
+
+				micp_mic_ctlr_discover_complete(mic_ctlr, err);
+
+				return BT_GATT_ITER_STOP;
 			}
 		}
 	}
@@ -471,18 +484,12 @@ static void micp_mic_ctlr_reset(struct bt_micp_mic_ctlr *mic_ctlr)
 	mic_ctlr->start_handle = 0;
 	mic_ctlr->end_handle = 0;
 	mic_ctlr->mute_handle = 0;
+#if defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
 	mic_ctlr->aics_inst_cnt = 0;
+#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
 
 	if (mic_ctlr->conn != NULL) {
 		struct bt_conn *conn = mic_ctlr->conn;
-
-		/* It's okay if this fails. In case of disconnect, we can't
-		 * unsubscribe and it will just fail.
-		 * In case that we reset due to another call of the discover
-		 * function, we will unsubscribe (regardless of bonding state)
-		 * to accommodate the new discovery values.
-		 */
-		(void)bt_gatt_unsubscribe(conn, &mic_ctlr->mute_sub_params);
 
 		bt_conn_unref(conn);
 		mic_ctlr->conn = NULL;
@@ -597,6 +604,7 @@ int bt_micp_mic_ctlr_cb_register(struct bt_micp_mic_ctlr_cb *cb)
 	return 0;
 }
 
+#if defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
 int bt_micp_mic_ctlr_included_get(struct bt_micp_mic_ctlr *mic_ctlr,
 				  struct bt_micp_included *included)
 {
@@ -614,6 +622,7 @@ int bt_micp_mic_ctlr_included_get(struct bt_micp_mic_ctlr *mic_ctlr,
 
 	return 0;
 }
+#endif /* CONFIG_BT_MICP_MIC_CTLR_AICS */
 
 struct bt_micp_mic_ctlr *bt_micp_mic_ctlr_get_by_conn(const struct bt_conn *conn)
 {

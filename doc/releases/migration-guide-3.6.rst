@@ -36,6 +36,9 @@ Build System
   ``target_compile_definitions(app PRIVATE _POSIX_C_SOURCE=200809L)`` to your application
   or ``zephyr_library_compile_definitions(_POSIX_C_SOURCE=200809L)`` to your library.
 
+* Build type by setting ``CONF_FILE`` to ``prj_<build>.conf`` is now deprecated, users should
+  instead use the new ``-DFILE_SUFFIX`` feature :ref:`application-file-suffixes`.
+
 Kernel
 ======
 
@@ -177,6 +180,18 @@ Device Drivers and Device Tree
             status = "okay";
     };
 
+
+* The :dtcompatible:`st,stm32-ospi-nor` and :dtcompatible:`st,stm32-qspi-nor` give the nor flash
+  base address and size (in Bytes) with the **reg** property as follows.
+  The <size> property is not used anymore.
+
+  .. code-block:: devicetree
+
+    mx25lm51245: ospi-nor-flash@70000000 {
+            compatible = "st,stm32-ospi-nor";
+            reg = <0x70000000 DT_SIZE_M(64)>; /* 512 Mbits*/
+    };
+
 * The native Linux SocketCAN driver, which can now be used in both :ref:`native_posix<native_posix>`
   and :ref:`native_sim<native_sim>` with or without an embedded C-library, has been renamed to
   reflect this:
@@ -231,7 +246,9 @@ Device Drivers and Device Tree
 
 * ILI9XXX based displays now use the MIPI DBI driver class. These displays
   must now be declared within a MIPI DBI driver wrapper device, which will
-  manage interfacing with the display. For an example, see below:
+  manage interfacing with the display. Note that the `cmd-data-gpios` pin has
+  changed polarity with this update, to align better with the new
+  `dc-gpios` name. For an example, see below:
 
   .. code-block:: devicetree
 
@@ -254,7 +271,7 @@ Device Drivers and Device Tree
     mipi_dbi {
         compatible = "zephyr,mipi-dbi-spi";
         reset-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
-        dc-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+        dc-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
         spi-dev = <&spi2>;
         #address-cells = <1>;
         #size-cells = <0>;
@@ -450,6 +467,18 @@ Bluetooth
     :kconfig:option:`CONFIG_BT_MESH_SAR_RX_DISCARD_TIMEOUT`,
     :kconfig:option:`CONFIG_BT_MESH_SAR_RX_ACK_RETRANS_COUNT` Kconfig options.
 
+* Audio
+
+  * The ``BT_AUDIO_CODEC_LC3_*`` values from ``<zephyr/bluetooth/audio/lc3.h>`` have moved to
+    ``<zephyr/bluetooth/audio/audio.h>`` and have the ``LC3`` part of their names replaced by a
+    more semantically correct name: e.g.
+    ``BT_AUDIO_CODEC_LC3_CHAN_COUNT`` is now ``BT_AUDIO_CODEC_CAP_TYPE_CHAN_COUNT``,
+    ``BT_AUDIO_CODEC_LC3_FREQ`` is now ``BT_AUDIO_CODEC_CAP_TYPE_FREQ``, and
+    ``BT_AUDIO_CODEC_CONFIG_LC3_FREQ`` is now ``BT_AUDIO_CODEC_CFG_FREQ``, etc.
+    Similarly the ``enum``s have also been renamed.
+    E.g. ``bt_audio_codec_config_freq`` is now ``bt_audio_codec_cfg_freq``,
+    ``bt_audio_codec_capability_type`` is now ``bt_audio_codec_cap_type``,
+    ``bt_audio_codec_config_type`` is now ``bt_audio_codec_cfg_type``, etc. (:github:`67024`)
 
 LoRaWAN
 =======
@@ -502,6 +531,11 @@ Networking
 
 * The zperf ratio between mbps and kbps, kbps and bps is changed to 1000, instead of 1024,
   to align with iperf ratios.
+
+* For network buffer pools maximum allocation size was added to a common structure
+  ``struct net_buf_data_alloc`` as a new field ``max_alloc_size``. Similar member ``data_size`` of
+  ``struct net_buf_pool_fixed`` that was specific only for buffer pools with a fixed size was
+  removed.
 
 zcbor
 =====
