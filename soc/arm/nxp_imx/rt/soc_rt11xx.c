@@ -419,17 +419,13 @@ static ALWAYS_INLINE void clock_init(void)
 	 * operate ENET1G just like ENET peripheral
 	 */
 	rootCfg.mux = kCLOCK_ENET2_ClockRoot_MuxSysPll1Div2;
-	rootCfg.div = 10;
+	rootCfg.div = 4;
 	CLOCK_SetRootClock(kCLOCK_Root_Enet2, &rootCfg);
-#if CONFIG_ETH_MCUX_RMII_EXT_CLK
-	/* Set ENET1G_REF_CLK as an input driven by PHY */
-	IOMUXC_GPR->GPR5 &= ~IOMUXC_GPR_GPR5_ENET1G_REF_CLK_DIR(0x01U);
-	IOMUXC_GPR->GPR5 |= IOMUXC_GPR_GPR5_ENET1G_TX_CLK_SEL(0x1U);
-#else
-	/* Set ENET1G_REF_CLK as an output driven by ENET2_CLK_ROOT */
-	IOMUXC_GPR->GPR5 |= (IOMUXC_GPR_GPR5_ENET1G_REF_CLK_DIR(0x01U) |
-		IOMUXC_GPR_GPR5_ENET1G_TX_CLK_SEL(0x1U));
-#endif
+
+	/* Enable TX clock output on TX_CLK_IO pad */
+	IOMUXC_GPR->GPR5 |= IOMUXC_GPR_GPR5_ENET1G_RGMII_EN(0x01U);
+	/* Use ENET2_CLK_ROOT because we are in RGMII mode */
+	IOMUXC_GPR->GPR5 &= ~IOMUXC_GPR_GPR5_ENET1G_TX_CLK_SEL(0x01U);
 #endif
 #endif
 
