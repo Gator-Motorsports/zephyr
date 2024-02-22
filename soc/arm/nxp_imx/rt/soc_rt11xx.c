@@ -57,11 +57,11 @@
 #ifdef CONFIG_INIT_ARM_PLL
 static const clock_arm_pll_config_t armPllConfig = {
 #if defined(CONFIG_SOC_MIMXRT1176_CM4) || defined(CONFIG_SOC_MIMXRT1176_CM7)
-	/* resulting frequency: 24 * (166/(2* 2)) = 984MHz */
+	/* resulting frequency: 24 * (116/(2* 2)) = 696Mhz */
 	/* Post divider, 0 - DIV by 2, 1 - DIV by 4, 2 - DIV by 8, 3 - DIV by 1 */
 	.postDivider = kCLOCK_PllPostDiv2,
 	/* PLL Loop divider, Fout = Fin * ( loopDivider / ( 2 * postDivider ) ) */
-	.loopDivider = 166,
+	.loopDivider = 116,
 #elif defined(CONFIG_SOC_MIMXRT1166_CM4) || defined(CONFIG_SOC_MIMXRT1166_CM7)
 	/* resulting frequency: 24 * (200/(2 * 4)) = 600MHz */
 	/* Post divider, 0 - DIV by 2, 1 - DIV by 4, 2 - DIV by 8, 3 - DIV by 1 */
