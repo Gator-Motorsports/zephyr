@@ -5,23 +5,14 @@
 Migration guide to Zephyr v3.6.0 (Working Draft)
 ################################################
 
-This document describes the changes required or recommended when migrating your
-application from Zephyr v3.5.0 to Zephyr v3.6.0.
+This document describes the changes required when migrating your application from Zephyr v3.5.0 to
+Zephyr v3.6.0.
 
 Any other changes (not directly related to migrating applications) can be found in
 the :ref:`release notes<zephyr_3.6>`.
 
-Required changes
-****************
-
-Boards
-======
-
-* The deprecated Nordic SoC Kconfig option ``NRF_STORE_REBOOT_TYPE_GPREGRET`` has been removed,
-  applications that use this should switch to using the :ref:`boot_mode_api` instead.
-
 Build System
-============
+************
 
 * The deprecated ``prj_<board>.conf`` Kconfig file support has been removed, projects that use
   this should switch to using board Kconfig fragments instead (``boards/<board>.conf``).
@@ -40,7 +31,7 @@ Build System
   instead use the new ``-DFILE_SUFFIX`` feature :ref:`application-file-suffixes`.
 
 Kernel
-======
+******
 
 * The system heap size and its availability is now determined by a ``K_HEAP_MEM_POOL_SIZE``
   define instead of the :kconfig:option:`CONFIG_HEAP_MEM_POOL_SIZE` Kconfig option. Subsystems
@@ -51,11 +42,17 @@ Kernel
   :kconfig:option:`CONFIG_HEAP_MEM_POOL_IGNORE_MIN` option has been introduced (which defaults
   being disabled).
 
-C Library
-=========
+Boards
+******
+
+* The deprecated Nordic SoC Kconfig option ``NRF_STORE_REBOOT_TYPE_GPREGRET`` has been removed,
+  applications that use this should switch to using the :ref:`boot_mode_api` instead.
+* NXP: Enabled :ref:`linkserver<linkserver-debug-host-tools>` to be the default runner on the
+  following NXP boards: ``mimxrt685_evk_cm33``, ``frdm_k64f``, ``mimxrt1050_evk``, ``frdm_kl25z``,
+  ``mimxrt1020_evk``, ``mimxrt1015_evk``
 
 Optional Modules
-================
+****************
 
 The following modules have been made optional and are not downloaded with `west update` by default
 anymore:
@@ -67,7 +64,53 @@ name>`` command, or ``west config manifest.group-filter -- +optional`` to
 enable all optional modules, and then run ``west update`` again.
 
 Device Drivers and Device Tree
-==============================
+******************************
+
+* Various deprecated macros related to the deprecated devicetree label property
+  were removed. These are listed in the following table. The table also
+  provides replacements.
+
+  However, if you are still using code like
+  ``device_get_binding(DT_LABEL(node_id))``, consider replacing it with
+  something like ``DEVICE_DT_GET(node_id)`` instead. The ``DEVICE_DT_GET()``
+  macro avoids run-time string comparisons, and is also safer because it will
+  fail the build if the device does not exist.
+
+  .. list-table::
+     :header-rows: 1
+
+     * - Removed macro
+       - Replacement
+
+     * - ``DT_GPIO_LABEL(node_id, gpio_pha)``
+       - ``DT_PROP(DT_GPIO_CTLR(node_id, gpio_pha), label)``
+
+     * - ``DT_GPIO_LABEL_BY_IDX(node_id, gpio_pha, idx)``
+       - ``DT_PROP(DT_GPIO_CTLR_BY_IDX(node_id, gpio_pha, idx), label)``
+
+     * - ``DT_INST_GPIO_LABEL(inst, gpio_pha)``
+       - ``DT_PROP(DT_GPIO_CTLR(DT_DRV_INST(inst), gpio_pha), label)``
+
+     * - ``DT_INST_GPIO_LABEL_BY_IDX(inst, gpio_pha, idx)``
+       - ``DT_PROP(DT_GPIO_CTLR_BY_IDX(DT_DRV_INST(inst), gpio_pha, idx), label)``
+
+     * - ``DT_SPI_DEV_CS_GPIOS_LABEL(spi_dev)``
+       - ``DT_PROP(DT_SPI_DEV_CS_GPIOS_CTLR(spi_dev), label)``
+
+     * - ``DT_INST_SPI_DEV_CS_GPIOS_LABEL(inst)``
+       - ``DT_PROP(DT_SPI_DEV_CS_GPIOS_CTLR(DT_DRV_INST(inst)), label)``
+
+     * - ``DT_LABEL(node_id)``
+       - ``DT_PROP(node_id, label)``
+
+     * - ``DT_BUS_LABEL(node_id)``
+       - ``DT_PROP(DT_BUS(node_id), label)``
+
+     * - ``DT_INST_LABEL(inst)``
+       - ``DT_INST_PROP(inst, label)``
+
+     * - ``DT_INST_BUS_LABEL(inst)``
+       - ``DT_PROP(DT_BUS(DT_DRV_INST(inst)), label)``
 
 * The :dtcompatible:`nxp,pcf8574` driver has been renamed to
   :dtcompatible:`nxp,pcf857x`. (:github:`67054`) to support pcf8574 and pcf8575.
@@ -124,52 +167,6 @@ Device Drivers and Device Tree
 
   (:github:`62994`)
 
-* Various deprecated macros related to the deprecated devicetree label property
-  were removed. These are listed in the following table. The table also
-  provides replacements.
-
-  However, if you are still using code like
-  ``device_get_binding(DT_LABEL(node_id))``, consider replacing it with
-  something like ``DEVICE_DT_GET(node_id)`` instead. The ``DEVICE_DT_GET()``
-  macro avoids run-time string comparisons, and is also safer because it will
-  fail the build if the device does not exist.
-
-  .. list-table::
-     :header-rows: 1
-
-     * - Removed macro
-       - Replacement
-
-     * - ``DT_GPIO_LABEL(node_id, gpio_pha)``
-       - ``DT_PROP(DT_GPIO_CTLR(node_id, gpio_pha), label)``
-
-     * - ``DT_GPIO_LABEL_BY_IDX(node_id, gpio_pha, idx)``
-       - ``DT_PROP(DT_GPIO_CTLR_BY_IDX(node_id, gpio_pha, idx), label)``
-
-     * - ``DT_INST_GPIO_LABEL(inst, gpio_pha)``
-       - ``DT_PROP(DT_GPIO_CTLR(DT_DRV_INST(inst), gpio_pha), label)``
-
-     * - ``DT_INST_GPIO_LABEL_BY_IDX(inst, gpio_pha, idx)``
-       - ``DT_PROP(DT_GPIO_CTLR_BY_IDX(DT_DRV_INST(inst), gpio_pha, idx), label)``
-
-     * - ``DT_SPI_DEV_CS_GPIOS_LABEL(spi_dev)``
-       - ``DT_PROP(DT_SPI_DEV_CS_GPIOS_CTLR(spi_dev), label)``
-
-     * - ``DT_INST_SPI_DEV_CS_GPIOS_LABEL(inst)``
-       - ``DT_PROP(DT_SPI_DEV_CS_GPIOS_CTLR(DT_DRV_INST(inst)), label)``
-
-     * - ``DT_LABEL(node_id)``
-       - ``DT_PROP(node_id, label)``
-
-     * - ``DT_BUS_LABEL(node_id)``
-       - ``DT_PROP(DT_BUS(node_id), label)``
-
-     * - ``DT_INST_LABEL(inst)``
-       - ``DT_INST_PROP(inst, label)``
-
-     * - ``DT_INST_BUS_LABEL(inst)``
-       - ``DT_PROP(DT_BUS(DT_DRV_INST(inst)), label)``
-
 * The :dtcompatible:`st,stm32-lptim` lptim which is selected for counting ticks during
   low power modes is identified by **stm32_lp_tick_source** in the device tree as follows.
   The stm32_lptim_timer driver has been changed to support this.
@@ -179,7 +176,6 @@ Device Drivers and Device Tree
     stm32_lp_tick_source: &lptim1 {
             status = "okay";
     };
-
 
 * The :dtcompatible:`st,stm32-ospi-nor` and :dtcompatible:`st,stm32-qspi-nor` give the nor flash
   base address and size (in Bytes) with the **reg** property as follows.
@@ -226,6 +222,18 @@ Device Drivers and Device Tree
   or reject all incoming CAN RTR frames (the default). When :kconfig:option:`CONFIG_CAN_ACCEPT_RTR`
   is enabled, applications can still filter between Data and RTR frames in their receive callback
   functions as needed.
+
+* The :dtcompatible:`st,stm32h7-fdcan` CAN controller driver now supports configuring the
+  domain/kernel clock via devicetree. Previously, the driver only supported using the PLL1_Q clock
+  for kernel clock, but now it defaults to the HSE clock, which is the chip default. Boards that
+  use the PLL1_Q clock for FDCAN will need to override the ``clocks`` property as follows:
+
+  .. code-block:: devicetree
+
+    &fdcan1 {
+            clocks = <&rcc STM32_CLOCK_BUS_APB1_2 0x00000100>,
+                     <&rcc STM32_SRC_PLL1_Q FDCAN_SEL(1)>;
+    };
 
 * The io-channel cells of the following devicetree bindings were reduced from 2 (``positive`` and
   ``negative``) to the common ``input``, making it possible to use the various ADC DT macros with TI
@@ -284,18 +292,6 @@ Device Drivers and Device Tree
             width = <320>;
             height = <240>;
         };
-    };
-
-* The :dtcompatible:`st,stm32h7-fdcan` CAN controller driver now supports configuring the
-  domain/kernel clock via devicetree. Previously, the driver only supported using the PLL1_Q clock
-  for kernel clock, but now it defaults to the HSE clock, which is the chip default. Boards that
-  use the PLL1_Q clock for FDCAN will need to override the ``clocks`` property as follows:
-
-  .. code-block:: devicetree
-
-    &fdcan1 {
-            clocks = <&rcc STM32_CLOCK_BUS_APB1_2 0x00000100>,
-                     <&rcc STM32_SRC_PLL1_Q FDCAN_SEL(1)>;
     };
 
 * Runtime configuration is now disabled by default for Nordic UART drivers. The motivation for the
@@ -358,11 +354,11 @@ Device Drivers and Device Tree
 
   (:github:`66427`)
 
-Power Management
-================
+* The :dtcompatible:`st,hci-spi-v1` should be used instead of :dtcompatible:`zephyr,bt-hci-spi`
+  for the boards which are based on ST BlueNRG-MS.
 
 Shell
-=====
+*****
 
 * The following subsystem and driver shell modules are now disabled by default. Each required shell
   module must now be explicitly enabled via Kconfig (:github:`65307`):
@@ -400,15 +396,20 @@ Shell
   macro accepts additional arguments (ring buffer TX & RX size arguments) for compatibility with
   previous Zephyr version, but they are ignored, and will be removed in future release.
 
+* :kconfig:option:`CONFIG_SHELL_BACKEND_SERIAL_API` now does not automatically default to
+  :kconfig:option:`CONFIG_SHELL_BACKEND_SERIAL_API_ASYNC` when
+  :kconfig:option:`CONFIG_UART_ASYNC_API` is enabled, :kconfig:option:`CONFIG_SHELL_ASYNC_API`
+  also has to be enabled in order to use the asynchronous serial shell (:github: `68475`).
+
 Bootloader
-==========
+**********
 
 * MCUboot's deprecated ``CONFIG_ZEPHYR_TRY_MASS_ERASE`` Kconfig option has been removed. If an
   erase is needed when flashing MCUboot, this should now be provided directly to the ``west``
   command e.g. ``west flash --erase``. (:github:`64703`)
 
 Bluetooth
-=========
+*********
 
 * ATT now has its own TX buffer pool.
   If extra ATT buffers were configured using :kconfig:option:`CONFIG_BT_L2CAP_TX_BUF_COUNT`,
@@ -435,6 +436,9 @@ Bluetooth
 * The :c:func:`bt_l2cap_chan_send` API now requires the application to reserve
   enough bytes for the L2CAP headers. Call ``net_buf_reserve(buf,
   BT_L2CAP_SDU_CHAN_SEND_RESERVE);`` at buffer allocation time to do so.
+* `BT_ISO_TIMESTAMP_NONE` has been removed and the `ts` parameter of :c:func:`bt_iso_chan_send` has
+  as well. :c:func:`bt_iso_chan_send` now always sends without timestamp. To send with a timestamp,
+  :c:func:`bt_iso_chan_send_ts` can be used.
 
 * Mesh
 
@@ -479,9 +483,16 @@ Bluetooth
     E.g. ``bt_audio_codec_config_freq`` is now ``bt_audio_codec_cfg_freq``,
     ``bt_audio_codec_capability_type`` is now ``bt_audio_codec_cap_type``,
     ``bt_audio_codec_config_type`` is now ``bt_audio_codec_cfg_type``, etc. (:github:`67024`)
+  * The `ts` parameter of :c:func:`bt_bap_stream_send` has been removed.
+    :c:func:`bt_bap_stream_send` now always sends without timestamp.
+    To send with a timestamp, :c:func:`bt_bap_stream_send_ts` can be used.
+  * The `ts` parameter of :c:func:`bt_cap_stream_send` has been removed.
+    :c:func:`bt_cap_stream_send` now always sends without timestamp.
+    To send with a timestamp, :c:func:`bt_cap_stream_send_ts` can be used.
+
 
 LoRaWAN
-=======
+*******
 
 * The API to register a callback to provide battery level information to the LoRaWAN stack has been
   renamed from ``lorawan_set_battery_level_callback`` to
@@ -490,7 +501,7 @@ LoRaWAN
   (:github:`65103`)
 
 Networking
-==========
+**********
 
 * The CoAP public API has some minor changes to take into account. The
   :c:func:`coap_remove_observer` now returns a result if the observer was removed. This
@@ -538,7 +549,7 @@ Networking
   removed.
 
 zcbor
-=====
+*****
 
 * If you have zcbor-generated code that relies on the zcbor libraries through Zephyr, you must
   regenerate the files using zcbor 0.8.1. Note that the names of generated types and members has
@@ -565,7 +576,7 @@ zcbor
   :c:func:`zcbor_trace_file` and :c:func:`zcbor_trace`, both of which take a ``state`` parameter.
 
 Other Subsystems
-================
+****************
 
 * MCUmgr applications that make use of serial transports (shell or UART) must now select
   :kconfig:option:`CONFIG_CRC`, this was previously erroneously selected if MCUmgr was enabled,
@@ -581,19 +592,64 @@ Other Subsystems
   zbus options are renamed. Instead, the new :kconfig:option:`ZBUS_MSG_SUBSCRIBER_BUF_ALLOC_DYNAMIC`
   and :kconfig:option:`ZBUS_MSG_SUBSCRIBER_BUF_ALLOC_STATIC` options should be used.
 
+Userspace
+*********
+
+* A number of userspace related functions have been moved out of the ``z_`` namespace
+  and into the kernel namespace.
+
+  * ``Z_OOPS`` to :c:macro:`K_OOPS`
+  * ``Z_SYSCALL_MEMORY`` to :c:macro:`K_SYSCALL_MEMORY`
+  * ``Z_SYSCALL_MEMORY_READ`` to :c:macro:`K_SYSCALL_MEMORY_READ`
+  * ``Z_SYSCALL_MEMORY_WRITE`` to :c:macro:`K_SYSCALL_MEMORY_WRITE`
+  * ``Z_SYSCALL_DRIVER_OP`` to :c:macro:`K_SYSCALL_DRIVER_OP`
+  * ``Z_SYSCALL_SPECIFIC_DRIVER`` to :c:macro:`K_SYSCALL_SPECIFIC_DRIVER`
+  * ``Z_SYSCALL_OBJ`` to :c:macro:`K_SYSCALL_OBJ`
+  * ``Z_SYSCALL_OBJ_INIT`` to :c:macro:`K_SYSCALL_OBJ_INIT`
+  * ``Z_SYSCALL_OBJ_NEVER_INIT`` to :c:macro:`K_SYSCALL_OBJ_NEVER_INIT`
+  * ``z_user_from_copy`` to :c:func:`k_usermode_from_copy`
+  * ``z_user_to_copy`` to :c:func:`k_usermode_to_copy`
+  * ``z_user_string_copy`` to :c:func:`k_usermode_string_copy`
+  * ``z_user_string_alloc_copy`` to :c:func:`k_usermode_string_alloc_copy`
+  * ``z_user_alloc_from_copy```` to :c:func:`k_usermode_alloc_from_copy`
+  * ``z_user_string_nlen`` to :c:func:`k_usermode_string_nlen`
+  * ``z_dump_object_error`` to :c:func:`k_object_dump_error`
+  * ``z_object_validate`` to :c:func:`k_object_validate`
+  * ``z_object_find`` to :c:func:`k_object_find`
+  * ``z_object_wordlist_foreach`` to :c:func:`k_object_wordlist_foreach`
+  * ``z_thread_perms_inherit`` to :c:func:`k_thread_perms_inherit`
+  * ``z_thread_perms_set`` to :c:func:`k_thread_perms_set`
+  * ``z_thread_perms_clear`` to :c:func:`k_thread_perms_clear`
+  * ``z_thread_perms_all_clear`` to :c:func:`k_thread_perms_all_clear`
+  * ``z_object_uninit`` to :c:func:`k_object_uninit`
+  * ``z_object_recycle`` to :c:func:`k_object_recycle`
+  * ``z_obj_validation_check`` to :c:func:`k_object_validation_check`
+  * ``Z_SYSCALL_VERIFY_MSG`` to :c:macro:`K_SYSCALL_VERIFY_MSG`
+  * ``z_object`` to :c:struct:`k_object`
+  * ``z_object_init`` to :c:func:`k_object_init`
+  * ``z_dynamic_object_aligned_create`` to :c:func:`k_object_create_dynamic_aligned`
+
 Xtensa
-======
+******
 
 * :kconfig:option:`CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC` no longer has a default in
   the architecture layer. Instead, SoCs or boards will need to define it.
 
-Recommended Changes
-*******************
+* Scratch registers ``ZSR_ALLOCA`` has been renamed to ``ZSR_A0SAVE``.
 
-* New macros available for ST sensor DT properties setting. These macros have a self-explanatory
-  name that helps in recognizing what the property setting means (e.g. LSM6DSV16X_DT_ODR_AT_60Hz).
-  (:github:`65410`)
+* Renamed files with hyhphens to underscores:
 
-* Users of :ref:`native_posix<native_posix>` are recommended to migrate to
-  :ref:`native_sim<native_sim>`. :ref:`native_sim<native_sim>` supports all its use cases,
-  and should be a drop-in replacement for most.
+  * ``xtensa-asm2-context.h`` to ``xtensa_asm2_context.h``
+
+  * ``xtensa-asm2-s.h`` to ``xtensa_asm2_s.h``
+
+* ``xtensa_asm2.h`` has been removed. Use ``xtensa_asm2_context.h`` instead for
+  stack frame structs.
+
+* Renamed functions out of ``z_`` namespace into ``xtensa_`` namespace.
+
+  * ``z_xtensa_irq_enable`` to :c:func:`xtensa_irq_enable`
+
+  * ``z_xtensa_irq_disable`` to :c:func:`xtensa_irq_disable`
+
+  * ``z_xtensa_irq_is_enabled`` to :c:func:`xtensa_irq_is_enabled`
