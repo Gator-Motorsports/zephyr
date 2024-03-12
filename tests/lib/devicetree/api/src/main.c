@@ -7,6 +7,7 @@
 #include <zephyr/ztest.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/device.h>
+#include <zephyr/drivers/adc.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/mbox.h>
 
@@ -750,6 +751,20 @@ ZTEST(devicetree_api, test_irq)
 	zassert_true(DT_INST_IRQ_HAS_NAME(0, stat), "");
 	zassert_true(DT_INST_IRQ_HAS_NAME(0, done), "");
 	zassert_false(DT_INST_IRQ_HAS_NAME(0, alpha), "");
+
+#ifdef CONFIG_MULTI_LEVEL_INTERRUPTS
+	/* the following asserts check if interrupt IDs are encoded
+	 * properly when dealing with a node that consumes interrupts
+	 * from L2 aggregators extending different L1 interrupts.
+	 */
+	zassert_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 0),
+		      ((70 + 1) << CONFIG_1ST_LEVEL_INTERRUPT_BITS) | 11, "");
+	zassert_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 2),
+		      ((42 + 1) << CONFIG_1ST_LEVEL_INTERRUPT_BITS) | 12, "");
+#else
+	zassert_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 0), 70, "");
+	zassert_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 2), 42, "");
+#endif /* CONFIG_MULTI_LEVEL_INTERRUPTS */
 }
 
 ZTEST(devicetree_api, test_irq_level)
@@ -1105,6 +1120,27 @@ ZTEST(devicetree_api, test_io_channels)
 	zassert_equal(DT_INST_IO_CHANNELS_INPUT_BY_NAME(0, ch1), 10, "");
 	zassert_equal(DT_INST_IO_CHANNELS_INPUT_BY_NAME(0, ch2), 20, "");
 	zassert_equal(DT_INST_IO_CHANNELS_INPUT(0), 10, "");
+}
+
+#undef DT_DRV_COMPAT
+#define DT_DRV_COMPAT vnd_adc_temp_sensor
+ZTEST(devicetree_api, test_io_channel_names)
+{
+	struct adc_dt_spec adc_spec;
+
+	/* ADC_DT_SPEC_GET_BY_NAME */
+	adc_spec = (struct adc_dt_spec)ADC_DT_SPEC_GET_BY_NAME(TEST_TEMP, ch1);
+	zassert_equal(adc_spec.channel_id, 10, "");
+
+	adc_spec = (struct adc_dt_spec)ADC_DT_SPEC_GET_BY_NAME(TEST_TEMP, ch2);
+	zassert_equal(adc_spec.channel_id, 20, "");
+
+	/* ADC_DT_SPEC_INST_GET_BY_NAME */
+	adc_spec = (struct adc_dt_spec)ADC_DT_SPEC_INST_GET_BY_NAME(0, ch1);
+	zassert_equal(adc_spec.channel_id, 10, "");
+
+	adc_spec = (struct adc_dt_spec)ADC_DT_SPEC_INST_GET_BY_NAME(0, ch2);
+	zassert_equal(adc_spec.channel_id, 20, "");
 }
 
 #undef DT_DRV_COMPAT
@@ -2646,11 +2682,11 @@ ZTEST(devicetree_api, test_mbox)
 #undef DT_DRV_COMPAT
 #define DT_DRV_COMPAT vnd_adc_temp_sensor
 
-	const struct mbox_channel channel_tx = MBOX_DT_CHANNEL_GET(TEST_TEMP, tx);
-	const struct mbox_channel channel_rx = MBOX_DT_CHANNEL_GET(TEST_TEMP, rx);
+	const struct mbox_dt_spec channel_tx = MBOX_DT_SPEC_GET(TEST_TEMP, tx);
+	const struct mbox_dt_spec channel_rx = MBOX_DT_SPEC_GET(TEST_TEMP, rx);
 
-	zassert_equal(channel_tx.id, 1, "");
-	zassert_equal(channel_rx.id, 2, "");
+	zassert_equal(channel_tx.channel_id, 1, "");
+	zassert_equal(channel_rx.channel_id, 2, "");
 
 	zassert_equal(DT_MBOX_CHANNEL_BY_NAME(TEST_TEMP, tx), 1, "");
 	zassert_equal(DT_MBOX_CHANNEL_BY_NAME(TEST_TEMP, rx), 2, "");
@@ -2663,9 +2699,9 @@ ZTEST(devicetree_api, test_mbox)
 	zassert_equal(DT_MBOX_CHANNEL_BY_NAME(TEST_TEMP, tx), 1, "");
 	zassert_equal(DT_MBOX_CHANNEL_BY_NAME(TEST_TEMP, rx), 2, "");
 
-	const struct mbox_channel channel_zero = MBOX_DT_CHANNEL_GET(TEST_TEMP, zero);
+	const struct mbox_dt_spec channel_zero = MBOX_DT_SPEC_GET(TEST_TEMP, zero);
 
-	zassert_equal(channel_zero.id, 0, "");
+	zassert_equal(channel_zero.channel_id, 0, "");
 
 	zassert_equal(DT_MBOX_CHANNEL_BY_NAME(TEST_TEMP, zero), 0, "");
 
