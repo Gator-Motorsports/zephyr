@@ -35,4 +35,5 @@ properties:
     enum:
       - "mii"
       - "rmii"
+      - "rgmii"
       - "gmii"

@@ -19,7 +19,12 @@ static int mcux_ccm_on(const struct device *dev,
 {
 #ifdef CONFIG_ETH_NXP_ENET
 	if ((uint32_t)sub_system == IMX_CCM_ENET_CLK) {
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(enet), okay)
 		CLOCK_EnableClock(kCLOCK_Enet);
+#endif
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(enet1g), okay)
+		CLOCK_EnableClock(kCLOCK_Enet_1g);
+#endif
 	}
 #endif
 	return 0;
