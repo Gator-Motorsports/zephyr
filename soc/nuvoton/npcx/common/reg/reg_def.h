@@ -240,6 +240,14 @@ struct scfg_reg {
 #define NPCX_LV_GPIO_CTL(base, n) \
 	(*(volatile uint8_t *)(base + NPCX_LV_GPIO_CTL_OFFSET(n)))
 
+#define NPCX_JEN_CTL1_OFFSET 0x120
+#define NPCX_JEN_CTL1(base) (*(volatile uint8_t *)(base + (NPCX_JEN_CTL1_OFFSET)))
+
+#define NPCX_JEN_CTL1_JEN_EN       FIELD(0, 4)
+#define NPCX_JEN_CTL1_JEN_HEN      FIELD(4, 4)
+#define NPCX_JEN_CTL1_JEN_ENABLE   0x9
+#define NPCX_JEN_CTL1_JEN_DISABLE  0x6
+
 /* SCFG register fields */
 #define NPCX_DEVCNT_F_SPI_TRIS                6
 #define NPCX_DEVCNT_HIF_TYP_SEL_FIELD         FIELD(2, 2)
@@ -396,6 +404,8 @@ struct uart_reg {
 	(*(volatile uint8_t *)(base + NPCX_WKINEN_OFFSET(group)))
 #define NPCX_WKMOD(base, group) \
 	(*(volatile uint8_t *)(base + NPCX_WKMOD_OFFSET(group)))
+#define NPCX_WKST(base, group) \
+	(*(volatile uint8_t *)(base + NPCX_WKST_OFFSET(group)))
 
 /*
  * General-Purpose I/O (GPIO) device registers
@@ -1745,5 +1755,13 @@ struct spip_reg {
 #define NPCX_SPIP_CTL1_SCDV             FIELD(9, 7)
 #define NPCX_SPIP_STAT_BSY              0
 #define NPCX_SPIP_STAT_RBF              1
+
+/* Software-triggered Pheripheral Reset Controller Register */
+struct swrst_reg {
+	/* 0x000: Software Reset Trigger */
+	volatile uint16_t SWRST_TRG;
+	volatile uint8_t reserved1[2];
+	volatile uint32_t SWRST_CTL[4];
+};
 
 #endif /* _NUVOTON_NPCX_REG_DEF_H */

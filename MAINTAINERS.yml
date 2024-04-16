@@ -556,6 +556,7 @@ C library:
   maintainers:
     - stephanosio
   collaborators:
+    - aescolar
     - nashif
     - keith-packard
     - cfriedt
@@ -761,6 +762,8 @@ Devicetree:
   status: maintained
   maintainers:
     - galak
+  collaborators:
+    - decsny
   files:
     - scripts/dts/
     - dts/common/
@@ -778,6 +781,8 @@ Devicetree Bindings:
   status: maintained
   maintainers:
     - galak
+  collaborators:
+    - decsny
   files:
     - dts/bindings/
     - include/zephyr/dt-bindings/
@@ -2176,6 +2181,7 @@ Kernel:
     - dcpleung
     - cfriedt
     - npitre
+    - TaiJuWu
   files:
     - doc/kernel/
     - include/zephyr/kernel*.h
@@ -2472,7 +2478,9 @@ OSDP:
     - sample.mgmt.osdp
 
 hawkBit:
-  status: odd fixes
+  status: maintained
+  maintainers:
+    - maass-hamburg
   collaborators:
     - ycsin
   files:
@@ -2804,8 +2812,11 @@ nRF BSIM:
     - boards/native/nrf_bsim/
     - tests/boards/nrf52_bsim/
     - tests/bsim/
-  files-exclude:
-    - tests/bsim/*/
+    - doc/develop/test/bsim.rst
+    - .github/workflows/bsim-tests*
+  files-regex-exclude:
+    - tests\/bsim\/.*\/.*\.([ch]|conf)
+    - tests\/bsim\/.*\/(CMakeLists|Kconfig).*
   labels:
     - "platform: nRF BSIM"
   tests:
@@ -2891,8 +2902,8 @@ RISCV arch:
     - include/zephyr/arch/riscv/
     - soc/common/riscv-privileged/
     - soc/sifive/
-    - soc/riscv/
     - soc/starfive/
+    - soc/qemu/virt_riscv/
     - tests/arch/riscv/
     - doc/hardware/arch/risc-v.rst
     - drivers/interrupt_controller/intc_plic.c
@@ -2957,12 +2968,13 @@ Twister:
   maintainers:
     - nashif
   collaborators:
-    - galak
     - PerMac
     - hakehuang
     - gopiotr
     - golowanow
     - gchwier
+    - LukaszMrugala
+    - KamilxPaszkiet
   files:
     - scripts/twister
     - scripts/schemas/twister/
@@ -3079,8 +3091,7 @@ ADI Platforms:
     - drivers/ethernet/eth_adin*
     - drivers/mdio/mdio_adin*
     - drivers/regulator/regulator_adp5360*
-    - drivers/sensor/adt*/
-    - drivers/sensor/adxl*/
+    - drivers/sensor/adi/
     - dts/bindings/*/adi,*
     - dts/bindings/*/lltc,*
     - dts/bindings/*/maxim,*
@@ -3124,8 +3135,8 @@ Synopsys Platforms:
     - evgeniy-paltsev
     - IRISZZW
   files:
-    - soc/synopsys/
-    - boards/synopsys/
+    - soc/snps/
+    - boards/snps/
     - samples/boards/arc_secure_services/
   labels:
     - "platform: Synopsys"
@@ -3189,11 +3200,7 @@ Raspberry Pi Pico Platforms:
     - "platform: Raspberry Pi Pico"
 
 SiLabs Platforms:
-  status: maintained
-  maintainers:
-    - fkokosinski
-  collaborators:
-    - tgorochowik
+  status: odd fixes
   files:
     - soc/silabs/
     - boards/silabs/
@@ -3210,6 +3217,7 @@ Intel Platforms (X86):
   collaborators:
     - tbursztyka
     - laurenmurphyx64
+    - najumon1980
   files:
     - boards/intel/adl/
     - boards/intel/ehl/
@@ -3372,15 +3380,16 @@ NXP Platforms (S32):
 NXP Platforms (MPU):
   status: maintained
   maintainers:
-    - dleach02
-  collaborators:
     - JiafeiPan
+  collaborators:
+    - dleach02
     - dbaluta
     - iuliana-prodan
     - danieldegrasse
     - decsny
     - yvanderv
   files:
+    - dts/arm64/nxp/
     - soc/nxp/imx/
     - soc/nxp/layerscape/
   files-regex:
@@ -3476,7 +3485,7 @@ Renesas RA Platforms:
   maintainers:
     - soburi
   files:
-    - boards/arduino/uno_r4_minima/
+    - boards/arduino/uno_r4/
     - drivers/*/*renesas_ra*
     - drivers/pinctrl/renesas/ra/
     - dts/arm/renesas/ra/
@@ -3533,10 +3542,9 @@ STM32 Platforms:
   maintainers:
     - erwango
   collaborators:
-    - ABOSTM
+    - ajarmouni-st
     - FRASTM
     - gautierg-st
-    - Desvauxm-st
     - GeorgeCGV
   files:
     - boards/st/
@@ -3589,7 +3597,7 @@ ITE Platforms:
     - sjg20
   files:
     - boards/ite/
-    - drivers/*/*/*it8xxx2*.c
+    - drivers/sensor/ite/
     - drivers/*/*it8xxx2*.c
     - drivers/*/*_ite_*
     - dts/bindings/*/*ite*
@@ -3625,8 +3633,9 @@ TI K3 Platforms:
     - vaishnavachath
   collaborators:
     - gramsay0
+    - dnltz
   files:
-    - boards/phytec/*am62*/
+    - boards/phytec/phyboard_lyra/
     - boards/ti/*am62*/
     - drivers/*/*ti_k3*
     - dts/bindings/*/ti,k3*
@@ -3669,7 +3678,7 @@ Infineon Platforms:
     - drivers/*/*ifx_cat1*
     - drivers/*/*xmc*/
     - drivers/*/*xmc*.c
-    - drivers/*/*/*xmc*
+    - drivers/sensor/infineon/
     - dts/arm/infineon/
     - dts/arm/cypress/
     - soc/cypress/
@@ -3759,6 +3768,18 @@ Task Watchdog:
     - tests/drivers/syscon/
   tests:
     - drivers.syscon
+
+TDK Sensors:
+  status: maintained
+  maintainers:
+    - teburd
+    - MaureenHelm
+  files:
+    - drivers/sensor/tdk/
+  labels:
+    - "area: Sensors"
+  tests:
+    - drivers.sensors
 
 "Drivers: Time Aware GPIO":
   status: maintained
@@ -4229,9 +4250,7 @@ West:
     - "platform: Raspberry Pi Pico"
 
 "West project: hal_silabs":
-  status: maintained
-  maintainers:
-    - fkokosinski
+  status: odd fixes
   collaborators:
     - sateeshkotapati
     - yonsch
@@ -4650,6 +4669,7 @@ x86 arch:
     - dcpleung
     - ceolin
     - laurenmurphyx64
+    - najumon1980
   files:
     - arch/x86/
     - include/zephyr/arch/x86/

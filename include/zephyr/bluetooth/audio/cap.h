@@ -226,6 +226,9 @@ struct bt_cap_unicast_audio_start_stream_param {
 	 * The @p codec_cfg.meta shall include a list of CCIDs
 	 * (@ref BT_AUDIO_METADATA_TYPE_CCID_LIST) as well as a non-0
 	 * stream context (@ref BT_AUDIO_METADATA_TYPE_STREAM_CONTEXT) bitfield.
+	 *
+	 * This value is assigned to the @p stream, and shall remain valid while the stream is
+	 * non-idle.
 	 */
 	struct bt_audio_codec_cfg *codec_cfg;
 };
@@ -722,6 +725,17 @@ struct bt_cap_commander_cb {
 #endif /* CONFIG_BT_VCP_VOL_CTLR_VOCS */
 #endif /* CONFIG_BT_VCP_VOL_CTLR */
 #if defined(CONFIG_BT_MICP_MIC_CTLR)
+	/**
+	 * @brief Callback for bt_cap_commander_change_microphone_mute_state().
+	 *
+	 * @param conn           Pointer to the connection where the error
+	 *                       occurred. NULL if @p err is 0 or if cancelled by
+	 *                       bt_cap_commander_cancel()
+	 * @param err            0 on success, BT_GATT_ERR() with a
+	 *                       specific ATT (BT_ATT_ERR_*) error code or -ECANCELED if cancelled
+	 *                       by bt_cap_commander_cancel().
+	 */
+	void (*microphone_mute_changed)(struct bt_conn *conn, int err);
 #if defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
 	/**
 	 * @brief Callback for bt_cap_commander_change_microphone_gain_setting().

@@ -19,6 +19,7 @@
 #ifdef CONFIG_POSIX_SYSCONF
 #include <zephyr/posix/signal.h>
 #endif
+#include <zephyr/posix/sys/confstr.h>
 #include <zephyr/posix/sys/stat.h>
 #include <zephyr/posix/sys/sysconf.h>
 
@@ -236,6 +237,8 @@ int close(int file);
 ssize_t write(int file, const void *buffer, size_t count);
 ssize_t read(int file, void *buffer, size_t count);
 off_t lseek(int file, off_t offset, int whence);
+int fsync(int fd);
+int ftruncate(int fd, off_t length);
 
 /* File System related operations */
 int rename(const char *old, const char *newp);
@@ -265,6 +268,9 @@ unsigned sleep(unsigned int seconds);
 int usleep(useconds_t useconds);
 #ifdef CONFIG_POSIX_SYSCONF_IMPL_FULL
 long sysconf(int opt);
+#endif
+#if _POSIX_C_SOURCE >= 2
+size_t confstr(int name, char *buf, size_t len);
 #endif
 
 #ifdef __cplusplus
