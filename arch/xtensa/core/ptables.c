@@ -737,7 +737,8 @@ static uint32_t *dup_table(uint32_t *source_table)
 	for (i = 0; i < XTENSA_L1_PAGE_TABLE_ENTRIES; i++) {
 		uint32_t *l2_table, *src_l2_table;
 
-		if (is_pte_illegal(source_table[i])) {
+		if (is_pte_illegal(source_table[i]) ||
+			(i == XTENSA_MMU_L1_POS(XTENSA_MMU_PTEVADDR))) {
 			dst_table[i] = XTENSA_MMU_PTE_ILLEGAL;
 			continue;
 		}
@@ -1043,7 +1044,7 @@ static bool page_validate(uint32_t *ptables, uint32_t page, uint8_t ring, bool w
 	return true;
 }
 
-int arch_buffer_validate(void *addr, size_t size, int write)
+int arch_buffer_validate(const void *addr, size_t size, int write)
 {
 	int ret = 0;
 	uint8_t *virt;
